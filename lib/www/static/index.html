@@ -143,13 +143,7 @@
                       <!--<div flex="60">-->
                       <md-tabs flex md-dynamic-height md-border-bottom>
 
-                  		<md-tab label="Parameters">
-                  		    <br><br>
-                  		    <div layout="column" layout-align="center center">
-                  		      <div ng-bind-html="tab.params"></div>
-                  		    </div>
-
-                  		</md-tab>
+                  		
 
                           <md-tab label="Power Spectrum/Spectra">
 
@@ -176,7 +170,13 @@
                              </md-content>
                           </md-tab>
 
+                          <md-tab label="Parameters">
+                              <br><br>
+                              <div layout="column" layout-align="center center">
+                                <div ng-bind-html="tab.params"></div>
+                              </div>
 
+                          </md-tab>
 
                       </md-tabs>
                       <!--</div>-->
