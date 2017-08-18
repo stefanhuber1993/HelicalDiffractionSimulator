@@ -11,7 +11,8 @@ Run it by:
 The python interpreter in this case is the one packaged with EMAN2, since EMAN2 is required for reading hdf and mrc files.
 
 ## Run as a Service
-'''
+File springServer.service in /etc/systemd/system/ containing:
+
 [Unit]
 Description=Web Service Helical Specimen Simulation
 After=syslog.target network.target
@@ -30,6 +31,5 @@ Restart=always
 
 [Install]
 WantedBy=default.target
-'''
 
 
