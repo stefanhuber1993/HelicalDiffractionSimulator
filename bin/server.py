@@ -1,4 +1,5 @@
-from flask import Flask, request, redirect, url_for, jsonify
+#TH from flask import Flask, request, redirect, url_for, jsonify
+from flask import Flask, request, Response, redirect, url_for, jsonify
 from werkzeug import secure_filename
 import numpy as np
 from EMAN2 import EMData, EMNumPy
@@ -6,19 +7,61 @@ from powerspec import prepare_ideal_power_spectrum_from_layer_lines,compute_Bfac
 from layerline import generate_layerline_bessel_pairs_from_rise_and_rotation
 from plot import plot_power_spectra
 from bokeh.embed import components
+#TH
+from flask_login import current_user
+from bokeh.util import session_id
+#TH END
+from functools import wraps
 import sys
 import os
 import time
-
+###TH https://stackoverflow.com/questions/12118355/secure-static-files-with-flask
+class SecuredStaticFlask(Flask):
+    def send_static_file(self, filename):
+        # Get user from session
+#	user = current_user
+#        if user.is_authenticated():
+	    auth = request.authorization
+	    #print("AUTH:"+auth.username)
+            if not auth or not check_auth(auth.username, auth.password):
+                return authenticate()
+            return super(SecuredStaticFlask, self).send_static_file(filename)
+#        else:
+#            abort(403) 
+            # Or 401 (or 404), whatever is most appropriate for your situation
+###TH END
 # Make new Flask Application Object
-app = Flask(__name__, static_folder=sys.argv[4].rstrip("/"))
+#TH app = Flask(__name__, static_folder=sys.argv[4].rstrip("/"))
+app = SecuredStaticFlask(__name__, static_url_path="/hspss",static_folder=sys.argv[4].rstrip("/"))
 
 # This is the path to the upload directory
 app.config['UPLOAD_FOLDER'] = sys.argv[3]
 # These are the extension that we are accepting to be uploaded
 app.config['ALLOWED_EXTENSIONS'] = set(['hdf', 'mrc', 'pgm'])
 
+### TH authentification acc to: http://flask.pocoo.org/snippets/8/
+def check_auth(username, password):
+    """This function is called to check if a username /
+    password combination is valid.
+    """
+    return username == 'test' and password == 'S@chseEMBL'
 
+def authenticate():
+    """Sends a 401 response that enables basic auth"""
+    return Response(
+    'Could not verify your access level for that URL.\n'
+    'You have to login with proper credentials', 401,
+    {'WWW-Authenticate': 'Basic realm="Login Required"'})
+
+def requires_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if not auth or not check_auth(auth.username, auth.password):
+            return authenticate()
+        return f(*args, **kwargs)
+    return decorated
+###
 # For a given file, return whether it's an allowed type or not
 def allowed_file(filename):
     return '.' in filename and \
@@ -26,12 +69,23 @@ def allowed_file(filename):
 
 #Serves index.html Page
 @app.route('/')
+@requires_auth
 def index():
     return redirect(url_for('static', filename='index.html'))
+    #return redirect(url_for('hspss', filename='index.html'))
 
+###TH
+@app.route('/hspss')
+@requires_auth
+def hspss():
+    return redirect(url_for('static', filename='index.html'))
+    #return redirect(url_for('hspss', filename='index.html'))
+
+###TH END
 
 # Route that will process the file upload
 @app.route('/upload', methods=['POST'])
+@requires_auth
 def upload():
     rotation = request.form['rotation']
     rise = request.form['rise']
@@ -90,6 +144,7 @@ def allowed_range(parameter, name, parmin, parmax):
 
 # Route that will return plot to the client
 @app.route("/upload/<filename>/<pixelsize>/<rise>/<rotation>/<highres>/<lowres>/<powersize>/<helixwidth>/<bfactor>/<sym>")
+@requires_auth
 def uploaded_file(filename, pixelsize, rise, rotation, highres, lowres, powersize, helixwidth, bfactor, sym):
     if filename!='None':
         im = EMData()
