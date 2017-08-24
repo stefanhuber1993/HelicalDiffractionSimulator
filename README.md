@@ -7,7 +7,7 @@ Web Service to Simulate the diffraction patterns of helical (protein) specimen
 
 ## Run directly
 Run it by:
-/EMAN2/extlib/bin/python /bin/server.py ${SPRING_IP} ${SPRING_PORT} ${SPRING_UPLOAD_TMP_FOLDER}
+python2.7 bin/server.py ${SPRING_IP} ${SPRING_PORT} ${SPRING_UPLOAD} ${SPRING_BASE}${SPRING_WWWSTATIC}
 The python interpreter in this case is the one packaged with EMAN2, since EMAN2 is required for reading hdf and mrc files.
 
 ## Run as a Service
