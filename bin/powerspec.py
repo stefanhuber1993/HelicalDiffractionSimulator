@@ -20,7 +20,7 @@ def make_combined_sim_real_powerspectrum(im, im_theo):
 
 
 def compute_Bfactor_mask(power_size, pixelsize, B):
-    grid_x, grid_y = (np.mgrid[0:power_size, 0:power_size] - power_size/2.0) / float(power_size) / pixelsize
+    grid_x, grid_y = (np.mgrid[0:power_size, 0:power_size] - power_size/2) / float(power_size) / pixelsize
     center_dist = np.hypot(grid_x, grid_y)
     center_dist[center_dist==0.0] = center_dist[center_dist!=0].min()
     d = 1.0/center_dist

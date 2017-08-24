@@ -15,20 +15,22 @@ from functools import wraps
 import sys
 import os
 import time
+import scipy.ndimage
+
 ###TH https://stackoverflow.com/questions/12118355/secure-static-files-with-flask
 class SecuredStaticFlask(Flask):
     def send_static_file(self, filename):
         # Get user from session
-#	user = current_user
-#        if user.is_authenticated():
-	    #auth = request.authorization
-	    #print("AUTH:"+auth.username)
-            #if not auth or not check_auth(auth.username, auth.password):
-                #return authenticate()
+        #	user = current_user
+        #        if user.is_authenticated():
+        auth = request.authorization
+        # print("AUTH:"+auth.username)
+        if not auth or not check_auth(auth.username, auth.password):
+            return authenticate()
         return super(SecuredStaticFlask, self).send_static_file(filename)
-#        else:
-#            abort(403) 
-            # Or 401 (or 404), whatever is most appropriate for your situation
+        #        else:
+        #            abort(403)
+        # Or 401 (or 404), whatever is most appropriate for your situation
 ###TH END
 # Make new Flask Application Object
 #TH app = Flask(__name__, static_folder=sys.argv[4].rstrip("/"))
@@ -37,7 +39,7 @@ app = SecuredStaticFlask(__name__, static_url_path="/hspss",static_folder=sys.ar
 # This is the path to the upload directory
 app.config['UPLOAD_FOLDER'] = sys.argv[3]
 # These are the extension that we are accepting to be uploaded
-app.config['ALLOWED_EXTENSIONS'] = set(['hdf', 'mrc', 'pgm'])
+app.config['ALLOWED_EXTENSIONS'] = set(['hdf', 'mrc', 'mrcs', 'pgm', 'jpg', 'jpeg', 'JPG', 'JPEG', 'png', 'PNG'])
 
 ### TH authentification acc to: http://flask.pocoo.org/snippets/8/
 def check_auth(username, password):
@@ -69,14 +71,15 @@ def allowed_file(filename):
 
 #Serves index.html Page
 @app.route('/')
-@requires_auth
+#@requires_auth
 def index():
+    print(sys.argv[4].rstrip("/"))
     return redirect(url_for('static', filename='index.html'))
     #return redirect(url_for('hspss', filename='index.html'))
 
 ###TH
 @app.route('/hspss')
-@requires_auth
+#@requires_auth
 def hspss():
     return redirect(url_for('static', filename='index.html'))
     #return redirect(url_for('hspss', filename='index.html'))
@@ -85,7 +88,7 @@ def hspss():
 
 # Route that will process the file upload
 @app.route('/upload', methods=['POST'])
-@requires_auth
+#@requires_auth
 def upload():
     rotation = request.form['rotation']
     rise = request.form['rise']
@@ -147,10 +150,18 @@ def allowed_range(parameter, name, parmin, parmax):
 @requires_auth
 def uploaded_file(filename, pixelsize, rise, rotation, highres, lowres, powersize, helixwidth, bfactor, sym):
     if filename!='None':
-        im = EMData()
         path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        im.read_image(str(path) , 0)
-        im = np.copy(EMNumPy.em2numpy(im))
+        extension = os.path.splitext(filename)[1]
+        if extension in ['.hdf', '.mrc']:
+            im = EMData()
+            im.read_image(str(path), 0)
+            im = np.copy(EMNumPy.em2numpy(im))
+        else:
+            im = scipy.ndimage.imread(path)
+        if len(im.shape)==3:
+            im = np.mean(im, 2)
+        min_side = np.array(im.shape).min()
+        im = im[0:min_side, 0:min_side] #square input
         os.remove(str(path))
         im_coll = im.mean(1)
         justsim = False
@@ -198,9 +209,9 @@ def uploaded_file(filename, pixelsize, rise, rotation, highres, lowres, powersiz
                                nyquist, nyquist_simulation, im, im_coll)
         im_theo_like_upload = prepare_ideal_power_spectrum_from_layer_lines(layerline_bessel_pairs, width,
                                                                 im.shape[0], pixelsize)
-        combi = make_combined_sim_real_powerspectrum(im, im_theo_like_upload)
+        combi = make_combined_sim_real_powerspectrum(im, im_theo_like_upload)[0:min_side, 0:min_side]
         falloff2 = compute_Bfactor_mask(im.shape[0], pixelsize, bfactor)
-        combi *= falloff2
+        combi *= falloff2[0:combi.shape[0], 0:combi.shape[0]]
         combi_coll = combi.mean(1)
         l2 = plot_power_spectra(layerline_bessel_pairs, combi, combi_coll,
                                 nyquist, nyquist)

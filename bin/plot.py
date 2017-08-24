@@ -28,7 +28,7 @@ def plot_power_spectra(layerline_bessel_pairs, im_theo, im_theo_coll, nyquist, n
     )
 
     x_vals1 = np.linspace(-nyquist_simulation, nyquist_simulation, len(im_theo_coll))
-    if im != None:
+    if im is not None:
         x_vals2 = np.linspace(-nyquist, nyquist, len(im_coll))
 
     TOOLS = 'wheel_zoom,pan,crosshair,reset'
@@ -50,7 +50,7 @@ def plot_power_spectra(layerline_bessel_pairs, im_theo, im_theo_coll, nyquist, n
                right=nyquist_simulation, color="white", source=source, alpha=0)
     plot1.add_tools(hover1)
 
-    if im != None:
+    if im is not None:
         plot2 = figure(x_range=plot1.x_range, y_range=plot1.y_range,
                        plot_width=size, plot_height=size, tools=TOOLS, toolbar_location="above")
 
@@ -60,7 +60,7 @@ def plot_power_spectra(layerline_bessel_pairs, im_theo, im_theo_coll, nyquist, n
                                 tools='')
         plot2_collapse.line(-im_coll, x_vals2, line_width=2, color='green')
 
-    if im == None:
+    if im is None:
         plots_im = [plot1]
         plots_1d = [plot1_collapse]
     else:
@@ -88,7 +88,7 @@ def plot_power_spectra(layerline_bessel_pairs, im_theo, im_theo_coll, nyquist, n
         p.toolbar.logo = None
         p.toolbar_location = None
 
-    if im != None:
+    if im is not None:
         # plot2.yaxis.axis_label = 'Angstrom'
         plot2.title.text_color = "orange"
 
@@ -97,7 +97,7 @@ def plot_power_spectra(layerline_bessel_pairs, im_theo, im_theo_coll, nyquist, n
 
     sizing = "fixed"  # "fixed"#'fixed'   sizing_mode
 
-    if im != None:
+    if im is not None:
         l = gridplot([[plot1, plot1_collapse, plot2_collapse, plot2]], sizing_mode=sizing)
     else:
         l = gridplot([[plot1_collapse, plot1]], sizing_mode=sizing)
