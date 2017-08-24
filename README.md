@@ -32,4 +32,10 @@ Restart=always
 [Install]
 WantedBy=default.target
 
+## Dependencies
+* Bokeh 0.12.4
+* Flask
+* Python 2.7
+* EMAN2
+
 
