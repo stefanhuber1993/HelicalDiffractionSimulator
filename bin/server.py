@@ -33,8 +33,8 @@ class SecuredStaticFlask(Flask):
         # Or 401 (or 404), whatever is most appropriate for your situation
 ###TH END
 # Make new Flask Application Object
-#TH app = Flask(__name__, static_folder=sys.argv[4].rstrip("/"))
-app = SecuredStaticFlask(__name__, static_url_path="/hspss",static_folder=sys.argv[4].rstrip("/"))
+app = Flask(__name__, static_url_path="/hspss", static_folder=sys.argv[4].rstrip("/"))
+#app = SecuredStaticFlask(__name__, static_url_path="/hspss",static_folder=sys.argv[4].rstrip("/"))
 
 # This is the path to the upload directory
 app.config['UPLOAD_FOLDER'] = sys.argv[3]
@@ -147,7 +147,7 @@ def allowed_range(parameter, name, parmin, parmax):
 
 # Route that will return plot to the client
 @app.route("/upload/<filename>/<pixelsize>/<rise>/<rotation>/<highres>/<lowres>/<powersize>/<helixwidth>/<bfactor>/<sym>")
-@requires_auth
+#@requires_auth
 def uploaded_file(filename, pixelsize, rise, rotation, highres, lowres, powersize, helixwidth, bfactor, sym):
     if filename!='None':
         path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -161,7 +161,7 @@ def uploaded_file(filename, pixelsize, rise, rotation, highres, lowres, powersiz
         if len(im.shape)==3:
             im = np.mean(im, 2)
         min_side = np.array(im.shape).min()
-        im = im[0:min_side, 0:min_side] #square input
+        im = np.rot90(im[0:min_side, 0:min_side].T) #square input
         os.remove(str(path))
         im_coll = im.mean(1)
         justsim = False
@@ -209,9 +209,9 @@ def uploaded_file(filename, pixelsize, rise, rotation, highres, lowres, powersiz
                                nyquist, nyquist_simulation, im, im_coll)
         im_theo_like_upload = prepare_ideal_power_spectrum_from_layer_lines(layerline_bessel_pairs, width,
                                                                 im.shape[0], pixelsize)
+        falloff2 = compute_Bfactor_mask(im_theo_like_upload.shape[0], pixelsize, bfactor)
+        im_theo_like_upload *= falloff2
         combi = make_combined_sim_real_powerspectrum(im, im_theo_like_upload)[0:min_side, 0:min_side]
-        falloff2 = compute_Bfactor_mask(im.shape[0], pixelsize, bfactor)
-        combi *= falloff2[0:combi.shape[0], 0:combi.shape[0]]
         combi_coll = combi.mean(1)
         l2 = plot_power_spectra(layerline_bessel_pairs, combi, combi_coll,
                                 nyquist, nyquist)
