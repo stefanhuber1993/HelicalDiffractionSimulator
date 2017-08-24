@@ -21,11 +21,11 @@ class SecuredStaticFlask(Flask):
         # Get user from session
 #	user = current_user
 #        if user.is_authenticated():
-	    auth = request.authorization
+	    #auth = request.authorization
 	    #print("AUTH:"+auth.username)
-            if not auth or not check_auth(auth.username, auth.password):
-                return authenticate()
-            return super(SecuredStaticFlask, self).send_static_file(filename)
+            #if not auth or not check_auth(auth.username, auth.password):
+                #return authenticate()
+        return super(SecuredStaticFlask, self).send_static_file(filename)
 #        else:
 #            abort(403) 
             # Or 401 (or 404), whatever is most appropriate for your situation
